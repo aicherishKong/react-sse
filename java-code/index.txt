@@ -1,0 +1,39 @@
+// controller
+@PostMapping(value = "/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+public SseEmitter streamResponse(@RequestBody Map<String, String> request) {
+    String prompt = request.get("prompt");
+    return chatService.streamResp(prompt);
+}
+
+// service
+ @Override
+    public SseEmitter streamResp(String prompt) {
+        SseEmitter sseEmitter = new SseEmitter(0L);
+        
+        chatClient.prompt(prompt)
+                .stream()
+                .content()
+                .subscribe(
+                    chunk -> {
+                        try {
+                            sseEmitter.send(SseEmitter.event().name("message").data(chunk));
+                        } catch (Exception e) {
+                            log.error("发送SSE消息失败: {}", e.getMessage());
+                            sseEmitter.completeWithError(e);
+                        }
+                    },
+                    error -> {
+                        log.error("流式响应发生错误: {}", error.getMessage());
+                        sseEmitter.completeWithError(error);
+                    },
+                    () -> {
+                        try {
+                            sseEmitter.complete();
+                        } catch (Exception e) {
+                            log.error("完成SSE连接时发生错误: {}", e.getMessage());
+                        }
+                    }
+                );
+        
+        return sseEmitter;
+    }
