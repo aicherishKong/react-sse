@@ -93,7 +93,7 @@ function App() {
   };
 
   // 处理SSE事件
-  const processSSEEvent = (event) => {
+  const processSSEEvent = (event: { event: string; data: string }) => {
     console.log("处理SSE事件:", event);
 
     if (event.event === "message" && event.data) {
@@ -120,7 +120,7 @@ function App() {
   };
 
   // 更新聊天文本
-  const updateChatText = (content) => {
+  const updateChatText = (content: string) => {
     setChatText((prev) => {
       const newText = prev + content;
       console.log("更新文本:", content, "总文本:", newText);
